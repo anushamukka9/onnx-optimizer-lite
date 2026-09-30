@@ -2,7 +2,7 @@
 
 Requires the optional ``onnxruntime`` extra (``pip install
 onnx-optimizer-lite[bench]``). Without it, every public function raises a
-clear error telling you exactly what to install — the rest of the package
+clear error telling you exactly what to install - the rest of the package
 keeps working.
 """
 
