@@ -12,7 +12,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
-from .analyzer import topological_order
+from .analyzer import compare_analysis, analyze, topological_order
 from .graph import (
     Graph,
     Node,
@@ -38,7 +38,7 @@ class PassResult:
 def eliminate_dead_nodes(graph: Graph) -> Tuple[Graph, PassResult]:
     """Remove nodes that cannot influence any graph output.
 
-    A node is dead when none of its outputs is consumed — transitively — by a
+    A node is dead when none of its outputs is consumed - transitively - by a
     graph output. Initializers that only fed dead nodes are pruned as well.
     """
     g = graph.copy()
@@ -260,3 +260,25 @@ def optimize(
         g, result = PASSES[name](g)
         results.append(result)
     return g, results
+
+
+def optimize_and_compare(
+    graph: Graph, passes: Tuple[str, ...] = DEFAULT_PASSES
+) -> Dict[str, Any]:
+    """Analyze, optimize, analyze again: the before/after story in one call.
+
+    Returns a dict with the optimized ``graph``, the ``before``/``after``
+    :func:`~onnx_optimizer_lite.analyzer.analyze` dicts, a ``comparison``
+    diff from :func:`~onnx_optimizer_lite.analyzer.compare_analysis`, and
+    the per-pass ``pass_results``.
+    """
+    before = analyze(graph)
+    optimized, results = optimize(graph, passes=passes)
+    after = analyze(optimized)
+    return {
+        "graph": optimized,
+        "before": before,
+        "after": after,
+        "comparison": compare_analysis(before, after),
+        "pass_results": results,
+    }
