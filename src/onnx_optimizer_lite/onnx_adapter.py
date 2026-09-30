@@ -2,8 +2,8 @@
 
 Everything in this module requires the optional ``onnx`` extra
 (``pip install onnx-optimizer-lite[onnx]``). Importing this module is safe
-without it — the error is raised only when you actually call a function that
-needs ``onnx`` — so ``import onnx_optimizer_lite.onnx_adapter`` never breaks
+without it - the error is raised only when you actually call a function that
+needs ``onnx`` - so ``import onnx_optimizer_lite.onnx_adapter`` never breaks
 a minimal install.
 """
 
@@ -31,7 +31,7 @@ def require_onnx():
         raise RuntimeError(
             "Reading/writing .onnx files needs the 'onnx' package, which is "
             "not installed. Install it with: pip install onnx-optimizer-lite[onnx] "
-            "(or analyze a JSON graph instead — see docs/usage.md)."
+            "(or analyze a JSON graph instead - see docs/usage.md)."
         ) from exc
     import onnx
 
