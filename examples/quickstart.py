@@ -1,7 +1,7 @@
 """Quickstart example: build a small graph, analyze it, optimize it.
 
 Run with:  python examples/quickstart.py
-(Works with only numpy installed — no onnx/onnxruntime needed.)
+(Works with only numpy installed - no onnx/onnxruntime needed.)
 """
 
 import json
