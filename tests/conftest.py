@@ -1,7 +1,7 @@
 """Shared fixtures for the onnx-optimizer-lite test suite.
 
 All fixtures build graphs with GraphBuilder, so the entire suite runs with
-only numpy installed — no ``onnx`` or ``onnxruntime`` required.
+only numpy installed - no ``onnx`` or ``onnxruntime`` required.
 """
 
 import numpy as np
