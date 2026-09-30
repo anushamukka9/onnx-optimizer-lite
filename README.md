@@ -1,13 +1,14 @@
 # onnx-optimizer-lite
 
 Analyze and optimize ONNX-style computation graphs: operator statistics,
-initializer size analysis, dead-node elimination, constant folding, dtype /
-quantization guidance, and an `onnxruntime` latency benchmark.
+initializer size analysis, shape inference, dead-node elimination, constant
+folding, before/after optimization comparisons, dtype / quantization
+guidance, and an `onnxruntime` latency benchmark.
 
 The core library works on a lightweight internal graph IR and needs **only
 numpy**. Reading real `.onnx` files needs the optional `onnx` extra; the
-latency benchmark needs the optional `onnxruntime` extra. Everything else —
-analysis, optimization, reports, the CLI — works without them.
+latency benchmark needs the optional `onnxruntime` extra. Everything else -
+analysis, optimization, reports, the CLI - works without them.
 
 ## Install
 
@@ -37,10 +38,11 @@ optimized, passes = optimize(graph)
 print(render_text(build_report(optimized, pass_results=passes)))
 ```
 
-Or run the bundled example (no `onnx` needed):
+Or run the bundled examples (no `onnx` needed):
 
 ```bash
-python examples/quickstart.py
+python examples/quickstart.py    # build a graph, analyze it, print a report
+python examples/optimize_mlp.py  # optimize a messy MLP: before/after comparison + shapes
 ```
 
 ## CLI
@@ -62,13 +64,31 @@ onnx-opt quant model.onnx --format json
 onnx-opt bench model.onnx --runs 100 --warmup 10
 ```
 
+`optimize` prints a before/after comparison table after the report: nodes,
+edges, initializers, depth, parameters, bytes, and per-operator changes.
+
+## Shape inference
+
+```python
+from onnx_optimizer_lite import infer_shapes
+
+shapes = infer_shapes(graph)
+shapes["tensors"]["Y"]  # {'shape': [1, 2], 'known': True, 'kind': 'output'}
+shapes["coverage"]      # fraction of tensors with fully known shapes
+```
+
+Shapes propagate from inputs, initializers, and constants through
+broadcasting elementwise ops, `MatMul`/`Gemm`, `Transpose`, `Reshape`,
+`Concat`, and shape-preserving unary ops. Tensors the inference cannot
+explain are reported as unknown rather than guessed.
+
 ## Python API
 
 | Module | What it does |
 | --- | --- |
 | `onnx_optimizer_lite.graph` | `Graph` IR, `TensorSpec`, `Node`, `GraphBuilder`, JSON round-trip |
-| `onnx_optimizer_lite.analyzer` | `analyze()`, `op_counts()`, `initializer_report()`, `graph_depth()`, `topological_order()` |
-| `onnx_optimizer_lite.optimizer` | `optimize()`, `eliminate_dead_nodes()`, `fold_constants()`, `remove_identity_nodes()` |
+| `onnx_optimizer_lite.analyzer` | `analyze()`, `op_counts()`, `initializer_report()`, `graph_depth()`, `topological_order()`, `infer_shapes()`, `compare_analysis()` |
+| `onnx_optimizer_lite.optimizer` | `optimize()`, `optimize_and_compare()`, `eliminate_dead_nodes()`, `fold_constants()`, `remove_identity_nodes()` |
 | `onnx_optimizer_lite.quant` | `quantization_guidance()`, `dtype_report()`, `size_after_dtype_conversion()` |
 | `onnx_optimizer_lite.report` | `build_report()`, `render_text/markdown/json()` |
 | `onnx_optimizer_lite.benchmark` | `benchmark_onnx()` → mean/p50/p95 latency (needs `onnxruntime`) |
@@ -84,7 +104,7 @@ See [docs/usage.md](docs/usage.md) for the full usage guide.
                     +--------+---------+
                              | from_onnx / to_onnx
                     +--------v---------+
-                    |  Graph IR        |  graph.py — the single data model
+                    |  Graph IR        |  graph.py - the single data model
                     +--------+---------+
                              |
         +--------------------+--------------------+
@@ -93,7 +113,10 @@ See [docs/usage.md](docs/usage.md) for the full usage guide.
  | analyzer    |     | optimizer     |    | quant         |
  | op counts,  |     | dead-node     |    | dtype report, |
  | sizes,      |     | elimination,  |    | INT8 guidance |
- | depth       |     | const folding |    +----------------+
+ | depth,      |     | const folding,|    +----------------+
+ | shapes,     |     | before/after  |
+ | before/     |     | comparison    |
+ | after diff  |     +-------+-------+
  +------+------+     +-------+-------+
         |                    |
         +---------+----------+
@@ -123,4 +146,4 @@ pytest -q
 
 ## License
 
-MIT — Copyright (c) 2026 Anusha Mukka. See [LICENSE](LICENSE).
+MIT - Copyright (c) 2026 Anusha Mukka. See [LICENSE](LICENSE).
