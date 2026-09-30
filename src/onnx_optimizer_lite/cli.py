@@ -68,23 +68,30 @@ def cmd_analyze(args: argparse.Namespace) -> int:
 
 
 def cmd_optimize(args: argparse.Namespace) -> int:
+    from .analyzer import analyze, compare_analysis
+
     graph = load_graph(args.model)
     graph.validate()
     passes = tuple(p.strip() for p in args.passes.split(",") if p.strip())
+    before = analyze(graph)
     optimized, results = optimize(graph, passes=passes)
+    after = analyze(optimized)
+    comp = compare_analysis(before, after)
     report = build_report(optimized, pass_results=results)
     if args.output:
         save_graph(optimized, args.output)
         print(f"Wrote optimized graph to {args.output}")
     print(render_text(report))
-    total_removed = sum(
-        len(r.details.get("removed_nodes", [])) for r in results
-    )
-    print(
-        f"Optimization: {len(optimized.nodes)} nodes "
-        f"({total_removed} removed), "
-        f"{len(optimized.initializers)} initializers."
-    )
+    print("Optimization: before -> after")
+    for key in ("num_nodes", "num_edges", "num_initializers", "graph_depth",
+                "total_parameters", "total_size_bytes"):
+        m = comp["metrics"][key]
+        delta = m["delta"]
+        suffix = f" ({delta:+d})" if delta else " (no change)"
+        print(f"  {key:<18} {m['before']} -> {m['after']}{suffix}")
+    if comp["op_delta"]:
+        changes = ", ".join(f"{op} {d:+d}" for op, d in comp["op_delta"].items())
+        print(f"  op changes: {changes}")
     return 0
 
 
