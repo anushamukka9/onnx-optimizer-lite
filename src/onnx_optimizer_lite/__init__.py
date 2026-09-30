@@ -5,7 +5,14 @@ Reading real ``.onnx`` files needs the optional ``onnx`` extra, and the
 latency benchmark needs the optional ``onnxruntime`` extra.
 """
 
-from .analyzer import analyze, graph_depth, initializer_report, op_counts
+from .analyzer import (
+    analyze,
+    compare_analysis,
+    graph_depth,
+    infer_shapes,
+    initializer_report,
+    op_counts,
+)
 from .benchmark import BenchmarkResult, benchmark_onnx
 from .graph import Graph, GraphBuilder, Node, TensorSpec
 from .optimizer import (
@@ -13,6 +20,7 @@ from .optimizer import (
     eliminate_dead_nodes,
     fold_constants,
     optimize,
+    optimize_and_compare,
     remove_identity_nodes,
 )
 from .quant import dtype_report, quantization_guidance, size_after_dtype_conversion
@@ -28,13 +36,16 @@ __all__ = [
     "PassResult",
     "BenchmarkResult",
     "analyze",
+    "compare_analysis",
     "graph_depth",
+    "infer_shapes",
     "initializer_report",
     "op_counts",
     "eliminate_dead_nodes",
     "fold_constants",
     "remove_identity_nodes",
     "optimize",
+    "optimize_and_compare",
     "dtype_report",
     "quantization_guidance",
     "size_after_dtype_conversion",
