@@ -128,3 +128,18 @@ def test_optimize_pipeline_folds_then_prunes():
 def test_optimize_unknown_pass_raises(mlp_graph):
     with pytest.raises(ValueError, match="Unknown passes"):
         optimize(mlp_graph, passes=("nope",))
+
+
+def test_optimize_and_compare_reports_before_after(graph_with_dead_branch):
+    from onnx_optimizer_lite.optimizer import optimize_and_compare
+
+    result = optimize_and_compare(graph_with_dead_branch)
+    assert set(result) == {"graph", "before", "after", "comparison", "pass_results"}
+    comp = result["comparison"]
+    assert comp["metrics"]["num_nodes"]["before"] == 4
+    assert comp["metrics"]["num_nodes"]["after"] == 2
+    assert comp["metrics"]["num_nodes"]["delta"] == -2
+    assert [n.op for n in result["graph"].nodes] == ["MatMul", "Relu"]
+    assert len(result["pass_results"]) == 3
+    # input graph not mutated
+    assert len(graph_with_dead_branch.nodes) == 4
